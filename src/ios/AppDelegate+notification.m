@@ -33,7 +33,7 @@ static char launchNotificationKey;
 - (AppDelegate *)swizzled_init
 {
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(createNotificationChecker:)
-               name:@"UIApplicationDidFinishLaunchingNotification" object:nil];
+                                                 name:@"UIApplicationDidFinishLaunchingNotification" object:nil];
 	
 	// This actually calls the original init method over in AppDelegate. Equivilent to calling super
 	// on an overrided method, this is not recursive, although it appears that way. neat huh?
@@ -55,6 +55,15 @@ static char launchNotificationKey;
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
     [pushHandler didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+    
+    // Store the deviceToken in the current installation and save it to Parse.
+    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+    [currentInstallation setDeviceTokenFromData:deviceToken];
+    
+#warning "this is for test channels"
+    [currentInstallation setChannels:@[@"LogNTest",@"LogNTest2",@"LogNTest3"]];
+    
+    [currentInstallation saveInBackground];
 }
 
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
@@ -88,7 +97,7 @@ static char launchNotificationKey;
     
     //zero badge
     application.applicationIconBadgeNumber = 0;
-
+    
     if (![self.viewController.webView isLoading] && self.launchNotification) {
         PushPlugin *pushHandler = [self getCommandInstance:@"PushPlugin"];
 		
@@ -102,7 +111,7 @@ static char launchNotificationKey;
 // http://developer.apple.com/library/ios/#documentation/cocoa/conceptual/objectivec/Chapters/ocAssociativeReferences.html
 - (NSMutableArray *)launchNotification
 {
-   return objc_getAssociatedObject(self, &launchNotificationKey);
+    return objc_getAssociatedObject(self, &launchNotificationKey);
 }
 
 - (void)setLaunchNotification:(NSDictionary *)aDictionary
